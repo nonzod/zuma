@@ -1,5 +1,7 @@
 # Zuma Robot
 
+**NOTA:** E' un "work in progress", il codice contiene parti temporanee, inutili, oscure e brutte. Usare con cautela.
+
 Zuma è basato sul kit Pololu Zumo
 
 [Link al kit](https://www.pololu.com/product/2509)
