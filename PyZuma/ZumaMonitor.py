@@ -9,9 +9,14 @@ class ZumaMonitor():
     DISPLAY_SIZE = (1280, 720)  # (1600, 900) (1280, 720) (640, 360)
     CAMERA_DEVICE = '/dev/video0'
     CAMERA_SIZE = (640, 360)
-    speed_motors = [0, 0]  # [x, y]
+    DEFAULT_SPEED = 200  # Velocità di default dei motori
 
     __dir = os.getcwd()
+    # Conversione per velocità ZumaMotors
+    # _input_speed valori assegnati in base ai tasti direzione 0, 1, -1
+    # _output_speed valori da passare a setSpeedMotors di arduino per far girare Zuma
+    _input_speed = [[0,0],[0,1],[0,-1],[1,0],[1,1],[1,-1],[-1,0],[-1,1],[-1,-1]]
+    _output_speed = [[0,0],[-DEFAULT_SPEED,DEFAULT_SPEED],[DEFAULT_SPEED,-DEFAULT_SPEED],[DEFAULT_SPEED,DEFAULT_SPEED],[DEFAULT_SPEED/2,DEFAULT_SPEED],[DEFAULT_SPEED,DEFAULT_SPEED/2],[-DEFAULT_SPEED,-DEFAULT_SPEED],[-DEFAULT_SPEED/2,-DEFAULT_SPEED],[-DEFAULT_SPEED,-DEFAULT_SPEED/2]]
 
     def __init__(self):
         self._observers = []  # Observer Pattern
@@ -67,13 +72,13 @@ class ZumaMonitor():
                 self.mousePos()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    self.setSpeeds(speed_x=+10)
+                    self.setSpeeds(speed_x=+1)
                 if event.key == pygame.K_DOWN:
-                    self.setSpeeds(speed_x=-10)
+                    self.setSpeeds(speed_x=-1)
                 if event.key == pygame.K_LEFT:
-                    self.setSpeeds(speed_y=-10)
+                    self.setSpeeds(speed_y=+1)
                 if event.key == pygame.K_RIGHT:
-                    self.setSpeeds(speed_y=+10)
+                    self.setSpeeds(speed_y=-1)
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_UP:
                     self.setSpeeds(speed_x=0)
@@ -86,17 +91,17 @@ class ZumaMonitor():
 
     def updateControlsImage(self):
         # Controlli direzionali X
-        if (self.getSpeeds()[0] == 10):
+        if (self.getSpeeds()[0] == 1):
             self.img_controls_x = pygame.image.load(self.__dir + '/assets/control_arrows_u.png')
-        elif (self.getSpeeds()[0] == -10):
+        elif (self.getSpeeds()[0] == -1):
             self.img_controls_x = pygame.image.load(self.__dir + '/assets/control_arrows_d.png')
         else:
             self.img_controls_x = pygame.image.load(self.__dir + '/assets/control_arrows_x.png')
         self.display.blit(self.img_controls_x, (800, 90))
         # Controlli direzionali Y
-        if (self.getSpeeds()[1] == 10):
+        if (self.getSpeeds()[1] == -1):
             self.img_controls_y = pygame.image.load(self.__dir + '/assets/control_arrows_r.png')
-        elif (self.getSpeeds()[1] == -10):
+        elif (self.getSpeeds()[1] == 1):
             self.img_controls_y = pygame.image.load(self.__dir + '/assets/control_arrows_l.png')
         else:
             self.img_controls_y = pygame.image.load(self.__dir + '/assets/control_arrows_y.png')
@@ -116,9 +121,11 @@ class ZumaMonitor():
             self._speeds[0] = speed_x
         if(speed_y is not None):
             self.speeds[1] = speed_y
+        # Ritorna la potenza da dare ai motiri L e R in base alla matrice di conversione _output_speed
+        output = self._output_speed[self._input_speed.index([self._speeds[0], self._speeds[1]])]
 
         for callback in self._observers:
-            callback(self._speeds)  # Avverto del cambiamento
+            callback(output)  # Avverto del cambiamento
 
     # Ritorna velocità attuale
     def getSpeeds(self):

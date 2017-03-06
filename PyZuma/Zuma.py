@@ -13,10 +13,10 @@ class Zuma():
             print('Non trovo Zuma!')
             self.device = False
 
-
+# Fa qualcosa quando cambiano le velocità
 def updateSpeeds(speeds):
-    print(speeds[0])
-    print(speeds[1])
+    print('X: ' + str(speeds[0]))
+    print('Y: ' + str(speeds[1]))
 
 
 monitor = ZumaMonitor()

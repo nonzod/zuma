@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <SoftwareSerial.h>
 #include <ZumoBuzzer.h>
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
@@ -25,6 +26,7 @@ const int I2CUSonic = 8; // Indirizzo I2C dell'array di sensori a ultrasuoni.
 ZumoMotors zMotors;
 Pushbutton zButton(ZUMO_BUTTON); // pushbutton on pin 12
 ZumoBuzzer zBuzzer;
+SoftwareSerial mySerial(18, 17); // RX, TX
 
 int default_speed = 200; // Velocità di crocera
 int slow_speed = 50; // Velocità lenta
@@ -37,14 +39,16 @@ bool slow_running = false; // Indicatore di andatura lenta
    SETUP
 */
 void setup() {
+  mySerial.begin(9600); // Bluetooth HM10
+
   zMotors.flipRightMotor(FLIP_RIGHT); // Il motore destro va flippato :)
   zMotors.flipLeftMotor(FLIP_LEFT); // Il motore destro va flippato :)
   motorsStop();
 
   Wire.begin(); // Comunicazione I2C
-
+  
 #ifdef LOG_SERIAL
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Zuma è pronto");
 #endif
 
@@ -55,17 +59,32 @@ void setup() {
    LOOP
 */
 void loop() {
+  hm10();
   if (zButton.isPressed()) {
     // Se premo il bottone mi fermo e aspetto una nuova pressione per ripartire
     zMotors.setSpeeds(0, 0);
     zButton.waitForRelease();
     waitForButtonAndGo(true);
   }
-
+  
   fillDistances();
   autoPilot();
 }
 
+void hm10() {
+  char c;
+  if (Serial.available()) {
+    c = Serial.read();
+    mySerial.print(c);
+  }
+  if (mySerial.available()) {
+    c = mySerial.read();
+    if(c == 's') {
+      waitForButtonAndGo(true);
+    }
+    Serial.print(c);    
+  }
+}
 /**
    Pilota automatico
 */
@@ -170,6 +189,10 @@ void fillDistances() {
     distances[usonic_pos] = readUSonicArray(I2CUSonic);
   }
 
+mySerial.print(distances[SLEFT]);
+mySerial.print(distances[SMIDDLE]);
+mySerial.print(distances[SRIGHT]);
+
 #ifdef LOG_SERIAL
   Serial.print(" L ");
   Serial.print(distances[SLEFT]);
@@ -177,9 +200,6 @@ void fillDistances() {
   Serial.print(distances[SMIDDLE]);
   Serial.print(" - R ");
   Serial.print(distances[SRIGHT]);
-#endif
-
-#ifdef LOG_SERIAL
   Serial.println();
 #endif
 
@@ -218,7 +238,7 @@ void waitForButtonAndGo(bool restarting) {
   Serial.println();
 #endif
 
-  zBuzzer.playFromProgramSpace(sound_effect);
+  //zBuzzer.playFromProgramSpace(sound_effect);
   delay(1000);
 
   // reset loop variables
