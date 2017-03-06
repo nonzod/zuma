@@ -1,0 +1,5 @@
+ffmpeg -re -i /media/1000R/Video/VID_20130102_210749.mp4 -f v4l2 /dev/video0
+
+Scalato:
+
+ffmpeg -re -i /media/1000R/Video/VID_20130102_210749.mp4 -vf scale=640:360 -f v4l2 /dev/video0
