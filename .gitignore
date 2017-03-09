@@ -1,7 +1,7 @@
-Zuma/PyZuma/bin
-Zuma/PyZuma/include
-Zuma/PyZuma/lib
-Zuma/PyZuma/lib64
-Zuma/PyZuma/__pycache__
-Zuma/PyZuma/share
-Zuma/PyZuma/pyvenv.cfg
+PyZuma/bin
+PyZuma/include
+PyZuma/lib
+PyZuma/lib64
+PyZuma/__pycache__
+PyZuma/share
+PyZuma/pyvenv.cfg
