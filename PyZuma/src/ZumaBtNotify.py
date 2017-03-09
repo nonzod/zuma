@@ -6,4 +6,4 @@ class ZumaBtNotify(DefaultDelegate):
         DefaultDelegate.__init__(self)
 
     def handleNotification(self, cHandle, data):
-        print(data)
+        print(zuma.Slip.decode(data))

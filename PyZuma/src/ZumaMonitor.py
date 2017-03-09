@@ -5,7 +5,7 @@ import os
 
 
 class ZumaMonitor():
-    FPS = 60
+    FPS = 25
     DISPLAY_SIZE = (1280, 720)  # (1600, 900) (1280, 720) (640, 360)
     CAMERA_DEVICE = '/dev/video0'
     CAMERA_SIZE = (640, 360)
@@ -15,11 +15,12 @@ class ZumaMonitor():
     # Conversione per velocità ZumaMotors
     # _input_speed valori assegnati in base ai tasti direzione 0, 1, -1
     # _output_speed valori da passare a setSpeedMotors di arduino per far girare Zuma
-    _input_speed = [[0,0],[0,1],[0,-1],[1,0],[1,1],[1,-1],[-1,0],[-1,1],[-1,-1]]
-    _output_speed = [[0,0],[-DEFAULT_SPEED,DEFAULT_SPEED],[DEFAULT_SPEED,-DEFAULT_SPEED],[DEFAULT_SPEED,DEFAULT_SPEED],[DEFAULT_SPEED/2,DEFAULT_SPEED],[DEFAULT_SPEED,DEFAULT_SPEED/2],[-DEFAULT_SPEED,-DEFAULT_SPEED],[-DEFAULT_SPEED/2,-DEFAULT_SPEED],[-DEFAULT_SPEED,-DEFAULT_SPEED/2]]
+    _input_speed = [[0, 0], [0, 1], [0, -1], [1, 0], [1, 1], [1, -1], [-1, 0], [-1, 1], [-1, -1]]
+    _output_speed = [[0, 0], [-DEFAULT_SPEED, DEFAULT_SPEED], [DEFAULT_SPEED, -DEFAULT_SPEED], [DEFAULT_SPEED, DEFAULT_SPEED], [DEFAULT_SPEED / 2, DEFAULT_SPEED], [DEFAULT_SPEED, DEFAULT_SPEED / 2], [-DEFAULT_SPEED, -DEFAULT_SPEED], [-DEFAULT_SPEED / 2, -DEFAULT_SPEED], [-DEFAULT_SPEED, -DEFAULT_SPEED / 2]]
 
     def __init__(self):
-        self._observers = []  # Observer Pattern
+        self._obs_speeds = []  # Observer Pattern
+        self._obs_params = []  # Observer Pattern
         self._speeds = [0, 0]
 
         pygame.init()
@@ -28,7 +29,7 @@ class ZumaMonitor():
         # Main Screen Display
         self.display = pygame.display.set_mode(self.DISPLAY_SIZE, 0)
         # Init Webcam
-        self.camera = pygame.camera.Camera(self.CAMERA_DEVICE, self.CAMERA_SIZE)
+        self.camera = pygame.camera.Camera(self.CAMERA_DEVICE)
         self.camera_enabled = True
         try:
             self.camera.start()
@@ -37,9 +38,9 @@ class ZumaMonitor():
             print("No Webcam! :(")
         # Area Webcam
         if(self.camera_enabled):
-            self.screen = pygame.surface.Surface(self.CAMERA_SIZE, 0, self.display)
+            self.screen = pygame.surface.Surface(self.camera.get_size(), 0, self.display)
         else:
-            pygame.draw.rect(self.display, (255, 0, 0), (10,  10,   650,   370))
+            pygame.draw.rect(self.display, (255, 0, 0), (10, 10, 650, 370))
         # Controlli direzionali
         self.img_controls_x = pygame.image.load(self.__dir + '/assets/control_arrows_x.png')
         self.img_controls_y = pygame.image.load(self.__dir + '/assets/control_arrows_y.png')
@@ -80,13 +81,9 @@ class ZumaMonitor():
                 if event.key == pygame.K_RIGHT:
                     self.setSpeeds(speed_y=-1)
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_UP:
+                if (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self._speeds[0] != 0:
                     self.setSpeeds(speed_x=0)
-                if event.key == pygame.K_DOWN:
-                    self.setSpeeds(speed_x=0)
-                if event.key == pygame.K_LEFT:
-                    self.setSpeeds(speed_y=0)
-                if event.key == pygame.K_RIGHT:
+                if (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT) and self._speeds[1] != 0:
                     self.setSpeeds(speed_y=0)
 
     def updateControlsImage(self):
@@ -109,11 +106,11 @@ class ZumaMonitor():
 
     def mousePos(self):
         discSize = random.randint(5, 50)
-        r = random.randint(100, 255)
-        g = random.randint(100, 255)
-        b = random.randint(100, 255)
-        discCol = [r, g, b]
-        pygame.draw.circle(self.display, discCol, self.mouse_pos, discSize)
+        # r = random.randint(100, 255)
+        # g = random.randint(100, 255)
+        # b = random.randint(100, 255)
+        # discCol = [r, g, b]
+        # pygame.draw.circle(self.display, discCol, self.mouse_pos, discSize)
 
     # Imposta velocità e avverte l'Observer
     def setSpeeds(self, speed_x=None, speed_y=None):
@@ -121,21 +118,35 @@ class ZumaMonitor():
             self._speeds[0] = speed_x
         if(speed_y is not None):
             self.speeds[1] = speed_y
+        if(speed_x is None and speed_y is None):
+            return None
         # Ritorna la potenza da dare ai motiri L e R in base alla matrice di conversione _output_speed
         output = self._output_speed[self._input_speed.index([self._speeds[0], self._speeds[1]])]
-
-        for callback in self._observers:
+        for callback in self._obs_speeds:
             callback(output)  # Avverto del cambiamento
+
+    def setParams(self, params=[]):
+        self._params = params
+        for callback in self._obs_params:
+            callback(params)  # Avverto del cambiamento
 
     # Ritorna velocità attuale
     def getSpeeds(self):
         return self._speeds
 
-    speeds = property(getSpeeds, setSpeeds) # Proprietà virtuale speeds
+    speeds = property(getSpeeds, setSpeeds)  # Proprietà virtuale speeds
+
+    def getParams(self):
+        return self._param
+
+    params = property(getParams, setParams)  # Proprietà virtuale params
 
     # Callback
     def handleSpeeds(self, callback):
-        self._observers.append(callback)
+        self._obs_speeds.append(callback)
+
+    def handleParams(self, callback):
+        self._obs_params.append(callback)
 
     def quit(self):
         if(self.camera_enabled):

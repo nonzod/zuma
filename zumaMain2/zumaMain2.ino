@@ -19,6 +19,11 @@
 // Accelerometer Settings
 #define RA_SIZE 3  // number of readings to include in running average of accelerometer readings
 #define XY_ACCELERATION_THRESHOLD 2400  // for detection of contact (~16000 = magnitude of acceleration due to gravity)
+// Bluetooth
+#define BLERX 18
+#define BLETX 17
+#define SOP '<'
+#define EOP '>'
 
 const char sound_effect[] PROGMEM = "O4 T100 V10 L4 MS g12>c12>e12>G6>E12 ML>G2"; // Melodia di avvio - V < 10 Muto; v15 Volume al massimo
 const int I2CUSonic = 8; // Indirizzo I2C dell'array di sensori a ultrasuoni.
@@ -26,65 +31,136 @@ const int I2CUSonic = 8; // Indirizzo I2C dell'array di sensori a ultrasuoni.
 ZumoMotors zMotors;
 Pushbutton zButton(ZUMO_BUTTON); // pushbutton on pin 12
 ZumoBuzzer zBuzzer;
-SoftwareSerial mySerial(18, 17); // RX, TX
+SoftwareSerial BleSerial(BLERX, BLETX); // RX, TX
 
+const byte numChars = 24;
 int default_speed = 200; // Velocità di crocera
 int slow_speed = 50; // Velocità lenta
 int max_speed = 400; // Velocità massima
 int usonic_pos; // Contatore per ciclare la lettura dei sensori
 int distances[3]; // Array per registrare le distanze
-bool slow_running = false; // Indicatore di andatura lenta
+boolean slow_running = false; // Indicatore di andatura lenta
+boolean newData = false;
+char receivedChars[numChars]; // an array to store the received data
 
 /**
    SETUP
 */
 void setup() {
-  mySerial.begin(9600); // Bluetooth HM10
+  pinMode(BLERX, INPUT);
+  pinMode(BLETX, OUTPUT);
 
   zMotors.flipRightMotor(FLIP_RIGHT); // Il motore destro va flippato :)
   zMotors.flipLeftMotor(FLIP_LEFT); // Il motore destro va flippato :)
   motorsStop();
 
   Wire.begin(); // Comunicazione I2C
-  
+
 #ifdef LOG_SERIAL
   Serial.begin(9600);
   Serial.println("Zuma è pronto");
 #endif
+  BleSerial.begin(9600);
+  BleSerial.print("BleSerial pronto");
 
-  waitForButtonAndGo(false);
+  //waitForButtonAndGo(false);
 }
 
 /**
    LOOP
 */
 void loop() {
-  hm10();
   if (zButton.isPressed()) {
     // Se premo il bottone mi fermo e aspetto una nuova pressione per ripartire
     zMotors.setSpeeds(0, 0);
     zButton.waitForRelease();
     waitForButtonAndGo(true);
   }
-  
-  fillDistances();
-  autoPilot();
+
+  //fillDistances();
+  //autoPilot();
+  bleRecvPackets();
+  //blePilot();
 }
 
-void hm10() {
-  char c;
-  if (Serial.available()) {
-    c = Serial.read();
-    mySerial.print(c);
+/**
+   Ricezione comandi BLE
+   Pacchetto in entrata "speed_left speed_right>"
+   es. "100 100>"
+*/
+void bleRecvPackets() {
+  static byte ndx = 0;
+  char endMarker = EOP;
+  char rc;
+
+  if (Serial.available() > 0) {
+    Serial.println("incoming");
   }
-  if (mySerial.available()) {
-    c = mySerial.read();
-    if(c == 's') {
-      waitForButtonAndGo(true);
+  while (BleSerial.available() > 0 && newData == false) {
+    rc = BleSerial.read();
+
+    if (rc != endMarker) {
+      receivedChars[ndx] = rc;
+      ndx++;
+      if (ndx >= numChars) {
+        ndx = numChars - 1;
+      }
+    } else {
+      ndx = 0;
+      newData = true;
     }
-    Serial.print(c);    
+  }
+
+  if (newData == true) {
+    char control[2];
+    int data[2];
+
+    char *token = strtok(receivedChars, " ");
+    for (int i = 0; i < 3; i++) {
+      if (token) {
+        if (i == 0) {
+          memcpy(control, token, 2);
+        } else {
+          data[i-1] = atoi(token);
+        }
+        token = strtok(NULL, " ");
+      }
+    }
+    
+    if (strcmp(control, "SP")  == 0) {
+      blePilot(data);
+      Serial.println(control);
+    }
+    newData = false;
+    memset(receivedChars, 0, sizeof(receivedChars));
   }
 }
+
+/**
+  Parse dei comandi via BLE
+*/
+void blePilot(int data[2]) {
+  //if (newData == true) {
+    /*int data[2];
+
+    // Separo i valori left e right divisi da " "
+    char *token = strtok(receivedChars, " ");
+    for (int i = 0; i < 2; i++) {
+      if (token) {
+        data[i] = atoi(token);
+        token = strtok(NULL, ",");
+      }
+    }*/
+
+    Serial.println(data[0]);
+    Serial.println(data[1]);
+    zMotors.setSpeeds(data[0], data[1]);
+    
+    /*newData = false;
+    memset(receivedChars, 0, sizeof(receivedChars));*/
+  //}
+}
+
 /**
    Pilota automatico
 */
@@ -189,9 +265,9 @@ void fillDistances() {
     distances[usonic_pos] = readUSonicArray(I2CUSonic);
   }
 
-mySerial.print(distances[SLEFT]);
-mySerial.print(distances[SMIDDLE]);
-mySerial.print(distances[SRIGHT]);
+  //BleSerial.print(distances[SLEFT]);
+  //BleSerial.print(distances[SMIDDLE]);
+  //BleSerial.print(distances[SRIGHT]);
 
 #ifdef LOG_SERIAL
   Serial.print(" L ");
@@ -243,11 +319,6 @@ void waitForButtonAndGo(bool restarting) {
 
   // reset loop variables
   // TODO
-  if (restarting == false) {
-    zMotors.setSpeeds(-50, -50);
-    delay(1500);
-    zMotors.setSpeeds(100, -100);
-    delay(800);
-  }
-  motorsForward(default_speed);
+  //motorsForward(default_speed);
 }
+
