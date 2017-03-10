@@ -24,7 +24,8 @@ class ZumaBtNotify(DefaultDelegate):
     def handleNotification(self, cHandle, data):
         # zuma.Slip.append(data)
         # print(zuma.Slip.decode())
-        print(data);
+        print(data)
+
 
 # Fa qualcosa quando cambiano le velocità
 def updateSpeeds(speeds):
@@ -36,6 +37,7 @@ def updateSpeeds(speeds):
     # Formato pacchetto: "leftspeed rightspeed>" 192 (C0) and 219 (DB)
     zuma.comm.write(str.encode('SP ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
 
+
 zuma = Zuma(addr='5c:f8:21:88:26:84')
 if(zuma.device is not False):
     zuma.device.withDelegate(ZumaBtNotify())
@@ -44,7 +46,7 @@ monitor = ZumaMonitor()
 monitor.handleSpeeds(updateSpeeds)
 
 while monitor.running:
-    if zuma.device.waitForNotifications(0.001): # Il temout non ho idea a quanto metterlo, ora è 0.001 sec
+    if zuma.device.waitForNotifications(0.001):  # Il temout non ho idea a quanto metterlo, ora è 0.001 sec
         continue
 
     monitor.run()

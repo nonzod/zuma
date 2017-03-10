@@ -9,7 +9,7 @@ class ZumaMonitor():
     DISPLAY_SIZE = (1280, 720)  # (1600, 900) (1280, 720) (640, 360)
     CAMERA_DEVICE = '/dev/video0'
     CAMERA_SIZE = (640, 360)
-    DEFAULT_SPEED = 200  # Velocità di default dei motori
+    DEFAULT_SPEED = 100  # Velocità di default dei motori
 
     __dir = os.getcwd()
     # Conversione per velocità ZumaMotors
