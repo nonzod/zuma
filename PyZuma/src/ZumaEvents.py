@@ -1,7 +1,7 @@
 import pygame as py
 
 
-class ZumaControls(object):
+class ZumaEvents(object):
     __obs_speeds = []  # Observers Motori
     __obs_params = []  # Observers Parametri
     __speeds = [0, 0]

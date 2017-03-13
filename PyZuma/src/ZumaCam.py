@@ -9,16 +9,18 @@ class ZumaCam(object):
         pygame.camera.init()
         self.clist = pygame.camera.list_cameras()
         if not self.clist:
-            raise ValueError("Nessuna WebCam trovata! :[")
-        self.device = pygame.camera.Camera(self.clist[0], CAMERA_SIZE)
-        try:
-            self.device.start()
-            self.is_enabled = True
-            self.surface = pygame.surface.Surface(self.device.get_size(), 0, display)
-        except:
             self.is_enabled = False
-            print("Errore nell'avvio della Webcam >:[")
-            self.surface = None
+            # raise ValueError("Nessuna WebCam trovata! :[")
+        else:
+            self.device = pygame.camera.Camera(self.clist[0], CAMERA_SIZE)
+            try:
+                self.device.start()
+                self.is_enabled = True
+                self.surface = pygame.surface.Surface(self.device.get_size(), 0, display)
+            except:
+                self.is_enabled = False
+                print("Errore nell'avvio della Webcam >:[")
+                self.surface = None
 
     def getDevice(self):
         return self.surface

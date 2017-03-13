@@ -1,7 +1,7 @@
 import os
 import pygame as py
 from ZumaCam import ZumaCam
-from ZumaControls import ZumaControls
+from ZumaEvents import ZumaEvents
 
 WIDTH = 1280  # width of our game window
 HEIGHT = 720  # height of our game window
@@ -34,10 +34,10 @@ class Zuma:
         # WebCam
         self.camera = ZumaCam(self.display)
         # Gestione input
-        self.controls = ZumaControls()
-        self.controls.handleMotorsSpeeds(self.sendSpeed)
-        self.controls.handleParams(self.updateParamsDisplay)
-        self.controls.setDefaults()
+        self.events = ZumaEvents()
+        self.events.handleMotorsSpeeds(self.sendSpeed)
+        self.events.handleParams(self.updateParamsDisplay)
+        self.events.setDefaults()
         # Controlli direzionali
         self.img_controls_x = py.image.load(self.__dir + '/assets/control_arrows_x.png')
         self.img_controls_y = py.image.load(self.__dir + '/assets/control_arrows_y.png')
@@ -52,15 +52,16 @@ class Zuma:
     def run(self):
         self._initialize()
         self.running = True
-        # Main loop
+        # Main loop :]
         while self.running:
             self.clock.tick(FPS)
             self.camera.getImage(self.display)
-            if self.controls.listen() == 0:
+            if self.events.listen() == 0:
                 self.running = False
             # *after* drawing everything, flip the display
             py.display.flip()
 
+    # Invia la velocità a Zuma
     def sendSpeed(self, speeds, directions):
         self.updateControlsImage(directions)
         print(speeds)
