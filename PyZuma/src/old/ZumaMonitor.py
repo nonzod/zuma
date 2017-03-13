@@ -16,18 +16,19 @@ class ZumaMonitor():
     # _input_speed valori assegnati in base ai tasti direzione 0, 1, -1
     # _output_speed valori da passare a setSpeedMotors di arduino per far girare Zuma
     _input_speed = [[0, 0], [0, 1], [0, -1], [1, 0], [1, 1], [1, -1], [-1, 0], [-1, 1], [-1, -1]]
-    _output_speed = [[0, 0], [-DEFAULT_SPEED, DEFAULT_SPEED], [DEFAULT_SPEED, -DEFAULT_SPEED], [DEFAULT_SPEED, DEFAULT_SPEED], [DEFAULT_SPEED / 2, DEFAULT_SPEED], [DEFAULT_SPEED, DEFAULT_SPEED / 2], [-DEFAULT_SPEED, -DEFAULT_SPEED], [-DEFAULT_SPEED / 2, -DEFAULT_SPEED], [-DEFAULT_SPEED, -DEFAULT_SPEED / 2]]
 
     def __init__(self):
         self._obs_speeds = []  # Observer Pattern
         self._obs_params = []  # Observer Pattern
         self._speeds = [0, 0]
+        self._params = []
+        self.force_stop = False
 
         pygame.init()
         pygame.camera.init()
         pygame.display.set_caption("Zuma Controls")
         # Main Screen Display
-        self.display = pygame.display.set_mode(self.DISPLAY_SIZE, 0)
+        self.display = pygame.display.set_mode(self.DISPLAY_SIZE, pygame.DOUBLEBUF)
         # Init Webcam
         self.camera = pygame.camera.Camera(self.CAMERA_DEVICE)
         self.camera_enabled = True
@@ -41,6 +42,7 @@ class ZumaMonitor():
             self.screen = pygame.surface.Surface(self.camera.get_size(), 0, self.display)
         else:
             pygame.draw.rect(self.display, (255, 0, 0), (10, 10, 650, 370))
+        self.font = pygame.font.SysFont("monospace", 15)
         # Controlli direzionali
         self.img_controls_x = pygame.image.load(self.__dir + '/assets/control_arrows_x.png')
         self.img_controls_y = pygame.image.load(self.__dir + '/assets/control_arrows_y.png')
@@ -73,18 +75,30 @@ class ZumaMonitor():
                 self.mousePos()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    self.setSpeeds(speed_x=+1)
+                    if(self.force_stop is not True):
+                        self.setSpeeds(speed_x=+1)
                 if event.key == pygame.K_DOWN:
                     self.setSpeeds(speed_x=-1)
                 if event.key == pygame.K_LEFT:
                     self.setSpeeds(speed_y=+1)
                 if event.key == pygame.K_RIGHT:
                     self.setSpeeds(speed_y=-1)
+                if event.key == pygame.K_PLUS and self.DEFAULT_SPEED < 250:
+                    self.DEFAULT_SPEED += 5
+                    self.updateDefaultSpeed()
+                if event.key == pygame.K_MINUS and self.DEFAULT_SPEED >= 0:
+                    self.DEFAULT_SPEED -= 5
+                    self.updateDefaultSpeed()
             if event.type == pygame.KEYUP:
                 if (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self._speeds[0] != 0:
                     self.setSpeeds(speed_x=0)
                 if (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT) and self._speeds[1] != 0:
                     self.setSpeeds(speed_y=0)
+
+    def updateDefaultSpeed(self):
+        label = self.font.render("MAX SPEED: {0}".format(self.DEFAULT_SPEED), 1, (255, 255, 255))
+        self.display.fill((0, 0, 0))  # Non va bene ma refresha la velocità
+        self.display.blit(label, (10, 500))
 
     def updateControlsImage(self):
         # Controlli direzionali X
@@ -121,7 +135,8 @@ class ZumaMonitor():
         if(speed_x is None and speed_y is None):
             return None
         # Ritorna la potenza da dare ai motiri L e R in base alla matrice di conversione _output_speed
-        output = self._output_speed[self._input_speed.index([self._speeds[0], self._speeds[1]])]
+        _output_speed = [[0, 0], [-self.DEFAULT_SPEED, self.DEFAULT_SPEED], [self.DEFAULT_SPEED, -self.DEFAULT_SPEED], [self.DEFAULT_SPEED, self.DEFAULT_SPEED], [self.DEFAULT_SPEED / 2, self.DEFAULT_SPEED], [self.DEFAULT_SPEED, self.DEFAULT_SPEED / 2], [-self.DEFAULT_SPEED, -self.DEFAULT_SPEED], [-self.DEFAULT_SPEED / 2, -self.DEFAULT_SPEED], [-self.DEFAULT_SPEED, -self.DEFAULT_SPEED / 2]]
+        output = _output_speed[self._input_speed.index([self._speeds[0], self._speeds[1]])]
         for callback in self._obs_speeds:
             callback(output)  # Avverto del cambiamento
 
