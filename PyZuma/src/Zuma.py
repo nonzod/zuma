@@ -82,10 +82,11 @@ class Zuma:
 
     def listen(self, rcv):
         if(self.device is not False):
-            if self.device.waitForNotifications(1.0):  # Il temout non ho idea a quanto metterlo :)
+            if self.device.waitForNotifications(0.001):  # Il temout non ho idea a quanto metterlo :)
                 if(rcv.pkt[:3] == 'US '):
                     _us = rcv.pkt[3:].split(' ')
-                    print('L: ' + _us[0] + ' C: ' + _us[1] + ' R: ' + _us[2])
+                    # print('L: ' + _us[0] + ' C: ' + _us[1] + ' R: ' + _us[2])
+                    print(rcv.pkt)
                     if int(_us[1]) > 0 and int(_us[1]) < 15:
                         self.comm.write(str.encode("10 0 0>"))
                         self.force_stop = True

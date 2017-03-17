@@ -2,12 +2,6 @@ void handleBleInput() {
   static byte ndx = 0;
   char rc;
 
-#ifdef LOG_SERIAL
-  if (Serial.available() > 0) {
-    Serial.println("incoming");
-  }
-#endif
-
   while (BleSerial.available() > 0 && ble_is_new == false) {
     rc = BleSerial.read();
 
@@ -40,7 +34,7 @@ void handleBleInput() {
     }
 
 #ifdef LOG_SERIAL
-      Serial.println(control);
+  Serial.print("Control: ");
 #endif
 
     /* Verifica il tipo di pacchetto
@@ -49,7 +43,16 @@ void handleBleInput() {
      */
     switch(control) {
       case 10:
+#ifdef LOG_SERIAL
+  Serial.println(control);
+#endif
         blePilot(data);
+        break;
+      default:
+#ifdef LOG_SERIAL
+  Serial.print("ERROR: ");
+  Serial.println(control);
+#endif
         break;
     }
     
@@ -63,8 +66,11 @@ void handleBleInput() {
  * Per ora invia solo le letture distanze
  */
 void sendBleData() {
+  BleSerial.print(F("US "));
   BleSerial.print(distances[SLEFT]);
+  BleSerial.print(F(" "));
   BleSerial.print(distances[SMIDDLE]);
+  BleSerial.print(F(" "));
   BleSerial.print(distances[SRIGHT]);
 }
 
@@ -74,7 +80,9 @@ void sendBleData() {
 void blePilot(int data[2]) {
   
 #ifdef LOG_SERIAL
-    Serial.println(data[0]);
+    Serial.print("Motors: ");
+    Serial.print(data[0]);
+    Serial.print(" : ");
     Serial.println(data[1]);
 #endif
 

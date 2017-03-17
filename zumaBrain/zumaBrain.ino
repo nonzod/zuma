@@ -1,3 +1,8 @@
+/**
+ * 
+ * Il cervello di Zuma...
+ * 
+ */
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <ZumoBuzzer.h>
@@ -22,8 +27,8 @@
 #define USONIC_ADDRESS 8
 
 // Bluetooth settings
-#define BLE_RX 18 // BLE RX Pin
-#define BLE_TX 17 // BLE TX Pin
+#define BLE_RX 17 // BLE RX Pin
+#define BLE_TX 16 // BLE TX Pin
 #define EOP '>' // Identifica la fine di un pacchetto via BLE
 
 // Debug
@@ -48,8 +53,11 @@ long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
  * distances[SRIGHT] Destra
  */
 byte distances[3]; // Letture delle distanze da ZumaEyes
-long eye_interval = 20; // Intervallo di invio dati via Bluetooth
-long eye_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
+long eye_interval = 50; // Intervallo letture delle distanze da ZumaEyes
+long eye_prev_ms = 0; // Tempo ultima lettura delle distanze da ZumaEyes
+
+long inp_interval = 20; // Intervallo di invio dati via Bluetooth
+long inp_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
 
 void setup() {
   // Setup BLE
@@ -68,25 +76,23 @@ void setup() {
   // Setup serial monitor
 #ifdef LOG_SERIAL
   Serial.begin(9600);
-  Serial.println("Zuma è pronto");
+  Serial.println(F("Zuma ready"));
 #endif
 }
 
 void loop() {
   unsigned long curr_ms = millis();
-  
-  // "Thread" invio dati Bluetooth
-  if(curr_ms - ble_prev_ms > ble_interval) {
+
+  if(curr_ms - inp_prev_ms > inp_interval) { // "Thread" lettura input
+    inp_prev_ms = curr_ms;
+    handleBleInput();
+  } else if(curr_ms - eye_prev_ms > eye_interval) { // "Thread" letture da zumaEyes
+    eye_prev_ms = curr_ms;
+    updateDistances();
+  } else if(curr_ms - ble_prev_ms > ble_interval) { // "Thread" letture da Bluetooth
     ble_prev_ms = curr_ms;
     sendBleData();
   }
-
-  // "Thread" letture da zumaEyes
-  if(curr_ms - eye_prev_ms > eye_interval) {
-    eye_prev_ms = curr_ms;
-    updateDistances();
-  }
   
-  // Leggi le cose Bluetooth
-  handleBleInput();
+  
 }
