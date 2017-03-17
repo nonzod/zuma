@@ -20,6 +20,8 @@ class ZumaEvents(object):
             # if event.type == py.MOUSEBUTTONDOWN:
             #    self.mousePos()
             if event.type == py.KEYDOWN:
+                if event.key == py.K_ESCAPE:
+                    return 0
                 if event.key == py.K_UP:
                     if(self.__force_stop is not True):
                         self.setMotorsSpeeds(speed_x=+1)

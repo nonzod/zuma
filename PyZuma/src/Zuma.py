@@ -1,11 +1,11 @@
-import os
+import os, time
 import pygame as py
 from ZumaCam import ZumaCam
 from ZumaEvents import ZumaEvents
 
 WIDTH = 1280  # width of our game window
 HEIGHT = 720  # height of our game window
-FPS = 50  # frames per second
+FPS = 25  # frames per second
 POS_CONTROLS = (800, 90)
 # Colors (R, G, B)
 BLACK = (0, 0, 0)
@@ -26,8 +26,14 @@ class Zuma:
     def _initialize(self):
         py.init()
         py.display.set_caption("Zuma Control")
+        # Initialise time and delta time variables
         self.clock = py.time.Clock()
-        self.display = py.display.set_mode((WIDTH, HEIGHT), py.DOUBLEBUF)
+        self.start_time = py.time.get_ticks()
+        self.delta_time = 0
+        self.elapsed_time = 0
+        self.scene_elapsed_time = 0
+        # Main Display
+        self.display = py.display.set_mode((WIDTH, HEIGHT), py.DOUBLEBUF)  # py.HWSURFACE|py.FULLSCREEN|py.DOUBLEBUF
         self.display.fill(BLACK)
         # Fonts
         self.font = py.font.SysFont("monospace", 15)
@@ -54,8 +60,10 @@ class Zuma:
         self.running = True
         # Main loop :]
         while self.running:
-            self.clock.tick(FPS)
-            self.camera.getImage(self.display)
+            self.delta_time = self.clock.tick(FPS) / 1000
+            self.elapsed_time = py.time.get_ticks() - self.start_time
+            # self.scene_elapsed_time += self.scene_start_time + self.delta_time * 1000
+            self.camera.getImage()
             if self.events.listen() == 0:
                 self.running = False
             # *after* drawing everything, flip the display
@@ -101,4 +109,12 @@ class Zuma:
 if __name__ == '__main__':
     z = Zuma()
     z.run()
+    # Profiling
+    '''
+    import profile, pstats
+    profile.run("z.run()", "profile.txt")
+    stats = pstats.Stats("profile.txt")
+    stats.sort_stats("cumulative")
+    stats.print_stats()
+    '''
     z.exit()
