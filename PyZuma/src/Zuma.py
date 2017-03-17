@@ -1,5 +1,6 @@
 import os, time
 import pygame as py
+from bluepy.btle import Peripheral, BTLEException, DefaultDelegate
 from ZumaCam import ZumaCam
 from ZumaEvents import ZumaEvents
 
@@ -20,8 +21,15 @@ class Zuma:
     __dir = os.getcwd()
     __labels = {}
 
-    def __init__(self):
+    def __init__(self, addr):
         self.running = False
+        try:
+            self.device = Peripheral(addr)
+        except BTLEException:
+            print('Non trovo Zuma!')
+            self.device = False
+        if(self.device is not False):
+            self.comm = self.device.getCharacteristics(uuid='0000ffe1-0000-1000-8000-00805f9b34fb')[0]
 
     def _initialize(self):
         py.init()
@@ -55,7 +63,7 @@ class Zuma:
         self.display.blit(self.__labels['MAX_SPEED'], (10, 500))
         self.display.blit(self.__labels['ULTRASONIC'], (10, 520))
 
-    def run(self):
+    def run(self, rcv):
         self._initialize()
         self.running = True
         # Main loop :]
@@ -67,12 +75,29 @@ class Zuma:
             if self.events.listen() == 0:
                 self.running = False
             # *after* drawing everything, flip the display
+            self.listen(rcv)
             py.display.flip()
 
+<<<<<<< HEAD
     # Invia la velocità a Zuma
+=======
+    def listen(self, rcv):
+        if(self.device is not False):
+            if self.device.waitForNotifications(0.001):  # Il temout non ho idea a quanto metterlo, ora è 0.001 sec
+                if(rcv.pkt[:3] == 'US '):
+                    _us = rcv.pkt[3:].split(' ')
+                    print('L: ' + _us[0] + ' C: ' + _us[1] + ' R: ' + _us[2])
+                    if int(_us[1]) > 0 and int(_us[1]) < 15:
+                        self.comm.write(str.encode("SP 0 0>"))
+                        print("STOOOOP")
+                    else:
+                        self.force_stop = False
+
+>>>>>>> 563f2b76dc5b0be0107405a7f4ef800fed3132a9
     def sendSpeed(self, speeds, directions):
         self.updateControlsImage(directions)
-        print(speeds)
+        self.comm.write(str.encode('SP ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
+        # print(speeds)
 
     def updateParamsDisplay(self, params):
         for k, v in params.items():
@@ -106,7 +131,17 @@ class Zuma:
         py.quit()
 
 
+class ZumaBtNotify(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+        self.pkt = None
+
+    def handleNotification(self, cHandle, data):
+        self.pkt = data.decode()
+
+
 if __name__ == '__main__':
+<<<<<<< HEAD
     z = Zuma()
     z.run()
     # Profiling
@@ -117,4 +152,11 @@ if __name__ == '__main__':
     stats.sort_stats("cumulative")
     stats.print_stats()
     '''
+=======
+    z = Zuma(addr='5c:f8:21:88:26:84')
+    rcv = ZumaBtNotify()
+    if(z.device is not False):
+        z.device.withDelegate(rcv)
+    z.run(rcv)
+>>>>>>> 563f2b76dc5b0be0107405a7f4ef800fed3132a9
     z.exit()
