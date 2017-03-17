@@ -51,6 +51,7 @@ void loop() {
 */
 void transmit() {
   byte hh;
+  
   switch (place) {
     case 0:
       hh = 255; // Start byte
@@ -65,6 +66,7 @@ void transmit() {
       hh = distance[SRIGHT];  // Invio lettura sensore Destra
       break;
   }
+  
   TinyWireS.send(hh);
   place = place + 1;
   if (place > 3) place = 0;

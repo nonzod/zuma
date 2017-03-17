@@ -74,27 +74,30 @@ class Zuma:
             self.camera.getImage()
             if self.events.listen() == 0:
                 self.running = False
-            # *after* drawing everything, flip the display
+            # Leggi da Bluetoth
             self.listen(rcv)
+            # *after* drawing everything, flip the display
             py.display.flip()
 
 
     def listen(self, rcv):
         if(self.device is not False):
-            if self.device.waitForNotifications(0.001):  # Il temout non ho idea a quanto metterlo, ora è 0.001 sec
+            if self.device.waitForNotifications(1.0):  # Il temout non ho idea a quanto metterlo :)
                 if(rcv.pkt[:3] == 'US '):
                     _us = rcv.pkt[3:].split(' ')
                     print('L: ' + _us[0] + ' C: ' + _us[1] + ' R: ' + _us[2])
                     if int(_us[1]) > 0 and int(_us[1]) < 15:
-                        self.comm.write(str.encode("SP 0 0>"))
-                        print("STOOOOP")
+                        self.comm.write(str.encode("10 0 0>"))
+                        self.force_stop = True
+                        print("STOP!")
                     else:
                         self.force_stop = False
 
     # Invia la velocità a Zuma
     def sendSpeed(self, speeds, directions):
         self.updateControlsImage(directions)
-        self.comm.write(str.encode('SP ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
+        if(self.device is not False):
+            self.comm.write(str.encode('10 ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
         # print(speeds)
 
     def updateParamsDisplay(self, params):

@@ -31,10 +31,10 @@ class ZumaEvents(object):
                     self.setMotorsSpeeds(speed_y=+1)
                 if event.key == py.K_RIGHT:
                     self.setMotorsSpeeds(speed_y=-1)
-                if event.key == py.K_PLUS and self.__base_speed < 250:
-                    self.setBaseSpeed(+5)
+                if event.key == py.K_PLUS and self.__base_speed < 400:
+                    self.setBaseSpeed(+10)
                 if event.key == py.K_MINUS and self.__base_speed > 0:
-                    self.setBaseSpeed(-5)
+                    self.setBaseSpeed(-10)
             if event.type == py.KEYUP:
                 if (event.key == py.K_UP or event.key == py.K_DOWN) and self.__speeds[0] != 0:
                     self.setMotorsSpeeds(speed_x=0)
@@ -64,11 +64,12 @@ class ZumaEvents(object):
     '''
     Modifica della velocità base di Zuma da GUI
     '''
-    def setBaseSpeed(self, value):
+    def setBaseSpeed(self, value, notify=True):
         self.__base_speed += value
         self.__output_speed = [[0, 0], [-self.__base_speed, self.__base_speed], [self.__base_speed, -self.__base_speed], [self.__base_speed, self.__base_speed], [self.__base_speed / 2, self.__base_speed], [self.__base_speed, self.__base_speed / 2], [-self.__base_speed, -self.__base_speed], [-self.__base_speed / 2, -self.__base_speed], [-self.__base_speed, -self.__base_speed / 2]]
-        for callback in self.__obs_params:
-            callback({'BASE_SPEED': self.__base_speed})  # Avverto del cambiamento
+        if notify == True:
+            for callback in self.__obs_params:
+                callback({'BASE_SPEED': self.__base_speed})  # Avverto del cambiamento
 
     def getBaseSpeed(self):
         return self.__base_speed

@@ -25,3 +25,7 @@ dalla dir dell'ambient virtuale e dopo `source bin/activate`:
 cd lib/python3.5/site-packages/bluepy
 make
 ```
+
+# Codici pacchetti inviati
+
+10 SPEED_LEFT SPEED_RIGHT>
