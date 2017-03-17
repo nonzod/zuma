@@ -78,9 +78,7 @@ class Zuma:
             self.listen(rcv)
             py.display.flip()
 
-<<<<<<< HEAD
-    # Invia la velocità a Zuma
-=======
+
     def listen(self, rcv):
         if(self.device is not False):
             if self.device.waitForNotifications(0.001):  # Il temout non ho idea a quanto metterlo, ora è 0.001 sec
@@ -93,7 +91,7 @@ class Zuma:
                     else:
                         self.force_stop = False
 
->>>>>>> 563f2b76dc5b0be0107405a7f4ef800fed3132a9
+    # Invia la velocità a Zuma
     def sendSpeed(self, speeds, directions):
         self.updateControlsImage(directions)
         self.comm.write(str.encode('SP ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
@@ -141,22 +139,9 @@ class ZumaBtNotify(DefaultDelegate):
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
-    z = Zuma()
-    z.run()
-    # Profiling
-    '''
-    import profile, pstats
-    profile.run("z.run()", "profile.txt")
-    stats = pstats.Stats("profile.txt")
-    stats.sort_stats("cumulative")
-    stats.print_stats()
-    '''
-=======
     z = Zuma(addr='5c:f8:21:88:26:84')
     rcv = ZumaBtNotify()
     if(z.device is not False):
         z.device.withDelegate(rcv)
     z.run(rcv)
->>>>>>> 563f2b76dc5b0be0107405a7f4ef800fed3132a9
     z.exit()
