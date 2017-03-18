@@ -43,7 +43,7 @@ SoftwareSerial BleSerial(BLE_RX, BLE_TX); // RX, TX
 const byte ble_size = 24; // Dimensione pacchetto in arrivo via BLE
 boolean ble_is_new = false; // E' un nuovo pacchetto BLE?
 char ble_chars[ble_size]; // Contenuto del pacchetto via BLE
-long ble_interval = 200; // Intervallo di invio dati via Bluetooth
+long ble_interval = 150; // Intervallo di invio dati via Bluetooth
 long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
 
 /*Ultrasonic Globals
@@ -53,7 +53,7 @@ long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
  * distances[SRIGHT] Destra
  */
 byte distances[3]; // Letture delle distanze da ZumaEyes
-long eye_interval = 50; // Intervallo letture delle distanze da ZumaEyes
+long eye_interval = 200; // Intervallo letture delle distanze da ZumaEyes
 long eye_prev_ms = 0; // Tempo ultima lettura delle distanze da ZumaEyes
 
 long inp_interval = 20; // Intervallo di invio dati via Bluetooth
@@ -82,17 +82,18 @@ void setup() {
 
 void loop() {
   unsigned long curr_ms = millis();
-
-  if(curr_ms - inp_prev_ms > inp_interval) { // "Thread" lettura input
+  
+  /*if(curr_ms - inp_prev_ms > inp_interval) { // "Thread" lettura input
     inp_prev_ms = curr_ms;
     handleBleInput();
-  } else if(curr_ms - eye_prev_ms > eye_interval) { // "Thread" letture da zumaEyes
+  } else */
+  if(curr_ms - eye_prev_ms > eye_interval) { // "Thread" letture da zumaEyes
     eye_prev_ms = curr_ms;
     updateDistances();
   } else if(curr_ms - ble_prev_ms > ble_interval) { // "Thread" letture da Bluetooth
     ble_prev_ms = curr_ms;
     sendBleData();
+  } else {
+    handleBleInput();
   }
-  
-  
 }

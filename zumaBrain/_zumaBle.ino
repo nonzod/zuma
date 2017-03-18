@@ -34,37 +34,72 @@ void handleBleInput() {
     }
 
 #ifdef LOG_SERIAL
-  Serial.print("Control: ");
+    Serial.print("Control: ");
 #endif
 
     /* Verifica il tipo di pacchetto
-     *  
-     *  10 SPEED_LEFT SPEED_RIGHT>
-     */
-    switch(control) {
+
+        10 SPEED_LEFT SPEED_RIGHT>
+    */
+    switch (control) {
       case 10:
 #ifdef LOG_SERIAL
-  Serial.println(control);
+        Serial.println(control);
 #endif
         blePilot(data);
         break;
       default:
+        setSpeeds(0, 0);
 #ifdef LOG_SERIAL
-  Serial.print("ERROR: ");
-  Serial.println(control);
+        Serial.print(F("ERROR: "));
+        Serial.println(control);
 #endif
         break;
     }
-    
+
     // Reset
     ble_is_new = false;
+    control = 0;
     memset(ble_chars, 0, sizeof(ble_chars));
+    delay(10);
   }
 }
 
+void bleHandleInput() {
+  String packet;
+
+  if (BleSerial.available() > 0) {
+    packet = BleSerial.readStringUntil(EOP);
+    String control = getValue(packet, ' ', 0);
+
+    switch (control.toInt()) {
+      case 10:
+        String left = getValue(packet, ' ', 1);
+        String right = getValue(packet, ' ', 2);
+        setSpeeds(left.toInt(), right.toInt());
+    }
+    Serial.println(control);
+  }
+}
+
+String getValue(String data, char separator, int index) {
+  int found = 0;
+  int strIndex[] = { 0, -1 };
+  int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
 /**
- * Per ora invia solo le letture distanze
- */
+   Per ora invia solo le letture distanze
+*/
 void sendBleData() {
   BleSerial.print(F("US "));
   BleSerial.print(distances[SLEFT]);
@@ -78,13 +113,13 @@ void sendBleData() {
   Motori comandati dagli input via Bluetooth
 */
 void blePilot(int data[2]) {
-  
+
 #ifdef LOG_SERIAL
-    Serial.print("Motors: ");
-    Serial.print(data[0]);
-    Serial.print(" : ");
-    Serial.println(data[1]);
+  Serial.print("Motors: ");
+  Serial.print(data[0]);
+  Serial.print(" : ");
+  Serial.println(data[1]);
 #endif
 
-    setSpeeds(data[0], data[1]);    
+  setSpeeds(data[0], data[1]);
 }
