@@ -1,8 +1,8 @@
 /**
- * 
- * Il cervello di Zuma...
- * 
- */
+
+   Il cervello di Zuma...
+
+*/
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <ZumoBuzzer.h>
@@ -47,11 +47,11 @@ long ble_interval = 150; // Intervallo di invio dati via Bluetooth
 long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
 
 /*Ultrasonic Globals
- * 
- * distances[SLEFT] Sinistra
- * distances[SMIDDLE] Centro
- * distances[SRIGHT] Destra
- */
+
+   distances[SLEFT] Sinistra
+   distances[SMIDDLE] Centro
+   distances[SRIGHT] Destra
+*/
 byte distances[3]; // Letture delle distanze da ZumaEyes
 long eye_interval = 200; // Intervallo letture delle distanze da ZumaEyes
 long eye_prev_ms = 0; // Tempo ultima lettura delle distanze da ZumaEyes
@@ -59,20 +59,25 @@ long eye_prev_ms = 0; // Tempo ultima lettura delle distanze da ZumaEyes
 long inp_interval = 20; // Intervallo di invio dati via Bluetooth
 long inp_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
 
+long debug_interval = 1000;
+long debug_prev_ms = 0;
+long num_pk = 0;
+long num_errors = 0;
+
 void setup() {
   // Setup BLE
   pinMode(BLE_RX, INPUT);
   pinMode(BLE_TX, OUTPUT);
   BleSerial.begin(9600);
-  
+
   // Setup motors
   zMotors.flipRightMotor(FLIP_RIGHT);
   zMotors.flipLeftMotor(FLIP_LEFT);
   motorsStop();
-  
+
   // Setup I2C
   Wire.begin();
-  
+
   // Setup serial monitor
 #ifdef LOG_SERIAL
   Serial.begin(9600);
@@ -82,18 +87,28 @@ void setup() {
 
 void loop() {
   unsigned long curr_ms = millis();
-  
-  /*if(curr_ms - inp_prev_ms > inp_interval) { // "Thread" lettura input
-    inp_prev_ms = curr_ms;
-    handleBleInput();
-  } else */
-  if(curr_ms - eye_prev_ms > eye_interval) { // "Thread" letture da zumaEyes
+
+  if (curr_ms - eye_prev_ms > eye_interval) { // "Thread" letture da zumaEyes
     eye_prev_ms = curr_ms;
     updateDistances();
-  } else if(curr_ms - ble_prev_ms > ble_interval) { // "Thread" letture da Bluetooth
+  }
+
+  if (curr_ms - ble_prev_ms > ble_interval) { // "Thread" invio dati Bluetooth
     ble_prev_ms = curr_ms;
     sendBleData();
-  } else {
-    handleBleInput();
+  }
+
+  if (curr_ms - inp_prev_ms > inp_interval) { // "Thread" letture da Bluetooth
+    bleHandleInput();
+  }
+
+  if (curr_ms - debug_prev_ms > debug_interval) { // "Thread" debug
+    debug_prev_ms = curr_ms;
+#ifdef LOG_SERIAL
+    Serial.print(F("Num/Err: "));
+    Serial.print(num_pk);
+    Serial.print(F("/"));
+    Serial.println(num_errors);
+#endif
   }
 }

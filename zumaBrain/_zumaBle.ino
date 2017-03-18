@@ -1,4 +1,4 @@
-void handleBleInput() {
+void bleHandleInput() {
   static byte ndx = 0;
   char rc;
 
@@ -32,10 +32,10 @@ void handleBleInput() {
         token = strtok(NULL, " ");
       }
     }
-
-#ifdef LOG_SERIAL
-    Serial.print("Control: ");
-#endif
+    
+//#ifdef LOG_SERIAL
+//    Serial.print("Control: ");
+//#endif
 
     /* Verifica il tipo di pacchetto
 
@@ -43,17 +43,19 @@ void handleBleInput() {
     */
     switch (control) {
       case 10:
-#ifdef LOG_SERIAL
-        Serial.println(control);
-#endif
+        num_pk++;
+//#ifdef LOG_SERIAL
+//       Serial.println(control);
+//#endif
         blePilot(data);
         break;
       default:
+        num_errors++;
         setSpeeds(0, 0);
-#ifdef LOG_SERIAL
-        Serial.print(F("ERROR: "));
-        Serial.println(control);
-#endif
+//#ifdef LOG_SERIAL
+//       Serial.print(F("ERROR: "));
+//        Serial.println(control);
+//#endif
         break;
     }
 
@@ -65,20 +67,27 @@ void handleBleInput() {
   }
 }
 
-void bleHandleInput() {
+/**
+ * Test con String
+ */
+void bleHandleInputS() {
   String packet;
-
+  String left;
+  String right;
+  
   if (BleSerial.available() > 0) {
     packet = BleSerial.readStringUntil(EOP);
     String control = getValue(packet, ' ', 0);
 
     switch (control.toInt()) {
       case 10:
-        String left = getValue(packet, ' ', 1);
-        String right = getValue(packet, ' ', 2);
+        left = getValue(packet, ' ', 1);
+        right = getValue(packet, ' ', 2);
         setSpeeds(left.toInt(), right.toInt());
+        break;
+      default:
+        Serial.println(control);
     }
-    Serial.println(control);
   }
 }
 
@@ -114,12 +123,12 @@ void sendBleData() {
 */
 void blePilot(int data[2]) {
 
-#ifdef LOG_SERIAL
-  Serial.print("Motors: ");
-  Serial.print(data[0]);
-  Serial.print(" : ");
-  Serial.println(data[1]);
-#endif
+//#ifdef LOG_SERIAL
+//  Serial.print("Motors: ");
+//  Serial.print(data[0]);
+//  Serial.print(" : ");
+//  Serial.println(data[1]);
+//#endif
 
   setSpeeds(data[0], data[1]);
 }
