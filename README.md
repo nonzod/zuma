@@ -6,6 +6,8 @@ Zuma è basato sul kit Pololu Zumo
 
 [Link al kit](https://www.pololu.com/product/2509)
 
+[Alcuni video di smanettamenti vari](https://www.youtube.com/playlist?list=PLJIxBVzDzd1Iara72QcWV6yH5hbcxgozS)
+
 ## Zumo Shield
 
 [Librerie Zumo](https://github.com/pololu/zumo-shield)
