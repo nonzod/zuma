@@ -64,3 +64,9 @@ Visto che i pin a disposizione sono pochi ho deciso di usare 3 HC-SR04 con un AT
 Lo schema del circuito che gestiste i sensori ad ultrasuoni:
 
 ![HC-SR04 I2C](docs/HC-SR04_i2c.png)
+
+### Adattatore Bluetooth 4 HM10
+
+[SunFounder Bluetooth 4.0 HM-10](https://www.sunfounder.com/bluetooth-4-0-hm-10-master-slave-module.html)
+
+Gestito su arduino con la libreria [SoftwareSerial](https://www.arduino.cc/en/Reference/softwareSerial)
