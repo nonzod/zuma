@@ -6,6 +6,10 @@ Zuma è basato sul kit Pololu Zumo
 
 [Link al kit](https://www.pololu.com/product/2509)
 
+Il primo obiettivo è quello di avere un "robot" in grado di muoversi in autonomia evitando gli ostacoli, i suoi occhi sono i 3 sensori ad ultrasuoni
+Il secondo è quello di avere la possibilità di pilotarlo da PC (tramite PyZuma) via Bluetooth, i sensori in questo caso evitano solo le collisioni frontali
+Il terzo ancora non lo so ma ci sto montando una action cam e quindi sarà qualcosa legato al riconoscimento facciale...
+
 [Alcuni video di smanettamenti vari](https://www.youtube.com/playlist?list=PLJIxBVzDzd1Iara72QcWV6yH5hbcxgozS)
 
 ## Zumo Shield
