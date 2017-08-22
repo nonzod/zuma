@@ -1,4 +1,6 @@
-import os, time
+import os
+import sys
+import getopt
 import pygame as py
 from bluepy.btle import Peripheral, BTLEException, DefaultDelegate
 from ZumaCam import ZumaCam
@@ -23,11 +25,28 @@ class Zuma:
 
     def __init__(self, addr):
         self.running = False
+        self.device = False
+        __no_ble = False
+
         try:
-            self.device = Peripheral(addr)
-        except BTLEException:
-            print('Non trovo Zuma!')
-            self.device = False
+            opts, args = getopt.getopt(sys.argv[1:], "hd")
+        except getopt.GetoptError:
+            print('Parametri errati')
+            sys.exit(2)
+        for opt, arg in opts:
+            if opt == '-h':
+                print('Modalità senza Bluetooth')
+                print('Zuma.py -d')
+                sys.exit()
+            elif opt in ("-d"):
+                __no_ble = True
+
+        if __no_ble is not True:
+            try:
+                self.device = Peripheral(addr)
+            except BTLEException:
+                print('Non trovo Zuma!')
+
         if(self.device is not False):
             self.comm = self.device.getCharacteristics(uuid='0000ffe1-0000-1000-8000-00805f9b34fb')[0]
 
@@ -72,13 +91,13 @@ class Zuma:
             self.elapsed_time = py.time.get_ticks() - self.start_time
             # self.scene_elapsed_time += self.scene_start_time + self.delta_time * 1000
             self.camera.getImage()
-            if self.events.listen() == 0:
-                self.running = False
             # Leggi da Bluetoth
             self.listen(rcv)
+
+            if self.events.listen() == 0:
+                self.running = False
             # *after* drawing everything, flip the display
             py.display.flip()
-
 
     def listen(self, rcv):
         if(self.device is not False):
@@ -86,7 +105,9 @@ class Zuma:
                 if(rcv.pkt[:3] == 'US '):
                     _us = rcv.pkt[3:].split(' ')
                     # print('L: ' + _us[0] + ' C: ' + _us[1] + ' R: ' + _us[2])
-                    print(rcv.pkt)
+                    self.updateParamsDisplay({"ULTRASONIC": _us})
+                    self.updateUsonicCircle(_us)
+                    # print(rcv.pkt)
                     if int(_us[1]) > 0 and int(_us[1]) < 15:
                         self.comm.write(str.encode("10 0 0>"))
                         self.force_stop = True
@@ -101,13 +122,19 @@ class Zuma:
             self.comm.write(str.encode('10 ' + str(int(speeds[0])) + ' ' + str(int(speeds[1])) + ">"))
         # print(speeds)
 
+    # Aggiorna le informazioni scritte nella GUI
     def updateParamsDisplay(self, params):
         for k, v in params.items():
             if k == 'BASE_SPEED':
                 self.display.fill(BLACK, (10, 500, 130, 20))
                 self.__labels['MAX_SPEED'] = self.font.render("MAX SPEED: {0}".format(v), 1, WHITE)
                 self.display.blit(self.__labels['MAX_SPEED'], (10, 500))
+            elif k == 'ULTRASONIC':
+                self.display.fill(BLACK, (10, 520, 400, 20))
+                self.__labels['ULTRASONIC'] = self.font.render("DISTANZE: {0}cm - {1}cm - {2}cm".format(v[0], v[1], v[2]), 1, WHITE)
+                self.display.blit(self.__labels['ULTRASONIC'], (10, 520))
 
+    # Aggiorna le immagini che rappresentano i controlli di movimento
     def updateControlsImage(self, directions):
         # Controlli direzionali X
         if (directions[0] == 1):
@@ -125,6 +152,24 @@ class Zuma:
         else:
             self.img_controls_y = py.image.load(self.__dir + '/assets/control_arrows_y.png')
         self.display.blit(self.img_controls_y, POS_CONTROLS)
+
+    # Aggiorna i colori dei cerchi che rappresentano i 3 sensori a ultrasuoni
+    def updateUsonicCircle(self, distances):
+        colors = {}
+        for idx, distance in enumerate(distances):
+            if int(distance) > 0 and int(distance) < 15:
+                colors[idx] = py.Color("red")
+            elif int(distance) > 14 and int(distance) < 30:
+                colors[idx] = py.Color("yellow")
+            else:
+                colors[idx] = py.Color("green")
+
+        py.draw.circle(self.display, colors[0], (800, 500), 30, 0)
+        py.draw.circle(self.display, colors[0], (800, 590), 30, 0)
+        py.draw.circle(self.display, colors[1], (920, 500), 30, 0)
+        py.draw.circle(self.display, colors[1], (920, 590), 30, 0)
+        py.draw.circle(self.display, colors[2], (1040, 500), 30, 0)
+        py.draw.circle(self.display, colors[2], (1040, 590), 30, 0)
 
     def exit(self):
         self.camera.quit()

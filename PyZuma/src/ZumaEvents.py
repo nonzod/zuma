@@ -67,7 +67,7 @@ class ZumaEvents(object):
     def setBaseSpeed(self, value, notify=True):
         self.__base_speed += value
         self.__output_speed = [[0, 0], [-self.__base_speed, self.__base_speed], [self.__base_speed, -self.__base_speed], [self.__base_speed, self.__base_speed], [self.__base_speed / 2, self.__base_speed], [self.__base_speed, self.__base_speed / 2], [-self.__base_speed, -self.__base_speed], [-self.__base_speed / 2, -self.__base_speed], [-self.__base_speed, -self.__base_speed / 2]]
-        if notify == True:
+        if notify is True:
             for callback in self.__obs_params:
                 callback({'BASE_SPEED': self.__base_speed})  # Avverto del cambiamento
 

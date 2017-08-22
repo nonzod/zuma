@@ -43,7 +43,7 @@ SoftwareSerial BleSerial(BLE_RX, BLE_TX); // RX, TX
 const byte ble_size = 24; // Dimensione pacchetto in arrivo via BLE
 boolean ble_is_new = false; // E' un nuovo pacchetto BLE?
 char ble_chars[ble_size]; // Contenuto del pacchetto via BLE
-long ble_interval = 150; // Intervallo di invio dati via Bluetooth
+long ble_interval = 80; // Intervallo di invio dati via Bluetooth
 long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
 
 /*Ultrasonic Globals
@@ -53,11 +53,11 @@ long ble_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
    distances[SRIGHT] Destra
 */
 byte distances[3]; // Letture delle distanze da ZumaEyes
-long eye_interval = 200; // Intervallo letture delle distanze da ZumaEyes
+long eye_interval = 160; // Intervallo letture delle distanze da ZumaEyes
 long eye_prev_ms = 0; // Tempo ultima lettura delle distanze da ZumaEyes
 
-long inp_interval = 20; // Intervallo di invio dati via Bluetooth
-long inp_prev_ms = 0; // Tempo dell'ultimo invio via Bluetooth
+long inp_interval = 40; // Intervallo di letture dati via Bluetooth
+long inp_prev_ms = 0; // Tempo dell'ultima lettura via Bluetooth
 
 long debug_interval = 1000;
 long debug_prev_ms = 0;

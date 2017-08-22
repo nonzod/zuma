@@ -4,7 +4,9 @@
 git clone https://github.com/nonzod/zuma.git Zuma
 cd Zuma
 python3 -m venv PyZuma/
+cd PyZuma
 source bin/activate
+pip install wheel
 pip install Bluepy
 pip install pygame
 python src/Zuma.py
